@@ -43,8 +43,15 @@ parser.add_argument(
     default=3800,
     help="Filter out overly long texts (0 means no limit).",
 )
+parser.add_argument(
+    "--wm-offset",
+    type=int,
+    default=0,
+    help="Global integer offset added to each per-user watermark RNG seed. "
+         "Does NOT change dataset sampling; only changes watermark strings. Example: 1 means +1.",
+)
 args = parser.parse_args()
-
+WM_OFFSET = int(args.wm_offset)
 # =========================
 # Path configuration
 # =========================
@@ -398,9 +405,9 @@ def generate_user_watermarks_deterministic(
     for uid_int in range(num_users):
         uid_str = f"user_{uid_int + 1:04d}"
 
-        # Deterministic per-user RNG
-        # Offset by 4
-        user_seed = RANDOM_SEED + uid_int + 4
+        # Deterministic per-user RNG (seed is offsettable without changing --seed)
+        # Base offset +4 keeps original behavior; WM_OFFSET shifts all users consistently.
+        user_seed = RANDOM_SEED + uid_int + 4 + WM_OFFSET
         user_rng = np.random.default_rng(user_seed)
 
         # Generate first half: must be globally unique
