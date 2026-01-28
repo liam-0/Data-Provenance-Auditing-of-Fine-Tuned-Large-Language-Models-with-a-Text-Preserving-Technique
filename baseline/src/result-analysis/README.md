@@ -1,4 +1,4 @@
-# Baseline Visualization (Unicode Properties)
+# Baseline Visualization (Experiment 4.6, Figure 5)
 
 This folder contains scripts used to **summarize and visualize the baseline
 experiments** based on the outputs of a unicode-properties scorer.
@@ -85,7 +85,7 @@ python summarize_unicode_properties.py   --input_dir ./scores   --output_csv pap
 
 ## 2. plot_unicode_properties.py
 
-**(fig.5)**
+**(Figure 5)**
 
 ### Purpose
 
