@@ -70,6 +70,66 @@ Generate a dataset version under `./data/<VERSION>/...`:
 python3 watermark.py   --source cnn_news   --train-size-total 1000   --num-users 1   --wm-per-user 100   --seed 123   --version XP1-T1000_U1_P100_seed123   --output-dir-root ./data   --max-wm-per-user 200   --max-tokens 0
 ```
 
+### Supported datasets & expected input format
+
+`watermark.py` supports multiple text sources.  
+Each source expects a **CSV file with a specific schema**, which is enforced by the code.
+
+#### blog1k
+- **CLI**: `--source blog1k`
+- **Default path**: `dataset/raw/blog1000.csv`
+- **Required columns**:
+  - `text` — full document text
+- **Filtering**:
+  - documents with fewer than **200 words** are discarded
+- **Notes**:
+  - only the `text` column is used
+  - one row corresponds to one document
+
+#### poems (Poetry Foundation)
+- **CLI**: `--source poems`
+- **Default path**: `dataset/raw/PoetryFoundationData.csv`
+- **Required columns**:
+  - `Title`
+  - `Poem`
+  - `Poet`
+  - `Tags`
+- **Text construction**:
+  Each row is converted into a single text field as:
+  - `Title` `Poem` `Poet` `Tags`
+- **Filtering**:
+- documents with fewer than **200 words** are discarded
+- **Notes**:
+- metadata is intentionally embedded to mimic natural documents
+
+#### cnn_news
+- **CLI**: `--source cnn_news`
+- **Default path**:  
+`dataset/raw/cnn_dm_3.0.0_train_article_8k_10k_chars.csv`
+- **Required columns**:
+- `article` — full news article text
+- **Filtering**:
+- documents with fewer than **200 words** are discarded
+- **Special handling**:
+- each article is split into **400-word chunks**
+- **each chunk is watermarked independently**
+- chunk-level prompts are generated for probing
+- **Additional output**:
+- `cnn_news_prompts.jsonl`, with entries of the form:
+  ```json
+  {
+    "row_id": <int>,
+    "user_id": "user_0001",
+    "chunk_id": <int>,
+    "prompt": "<first half of the watermarked chunk>",
+    "wm_first": "<ZW string>",
+    "wm_second": "<ZW string>"
+  }
+  ```
+- **Notes**:
+- prompt construction exactly matches the probing logic
+- enables chunk-level watermark detection on long articles
+
 ---
 
 ## 2) Training — `train_fast_full.py`
