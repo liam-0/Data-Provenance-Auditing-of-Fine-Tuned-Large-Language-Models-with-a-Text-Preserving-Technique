@@ -28,11 +28,14 @@ Scripts in `src/result-analysis/` are used to generate the figures reported for 
 - Experiment 4.3 (Figure 2): `src/result-analysis/plot_xp2.py`  
 
 - Experiment 4.4 (Figures 4 and 6): `src/result-analysis/plot_xp3.py`  
-  
 
 - Seed stability: `src/result-analysis/summary_seed_stability.py`  
   This script aggregates results across different random seeds and produces
-  a CSV file for statistical analysis.
+  a CSV file for statistical analysis. The averaged values reported in
+  **Table 1** and **Table 2** (and also each Figure) are computed using this script. Detailed results
+  for each individual experiment can be found in the corresponding
+  experiment-specific output files.
+  
 
 ## Baseline (Experiment 4.6, Figures 5) analysis and plotting
 
