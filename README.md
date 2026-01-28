@@ -35,7 +35,7 @@ Scripts in `src/result-analysis/` are used to generate the figures reported for 
   This script aggregates results across different random seeds and produces
   a CSV file for statistical analysis.
 
-## Baseline analysis and plotting
+## Baseline (Figures 5) analysis and plotting
 
 Baseline experiments follow the same training and evaluation pipeline as our method,
 with only the watermarking mechanism replaced.
