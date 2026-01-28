@@ -101,6 +101,60 @@ The script:
 
 contains sample texts used for robustness testing.
 
+### Character selection
+
+The `robustness/CharSelection/` directory documents the selection process for
+invisible Unicode characters used in the experiments.
+
+Candidate characters are collected from Unicode categories **Cc** (Control) and
+**Cf** (Format), and filtered by visual inspection across multiple environments
+(terminal, text editor, CSV viewer).
+
+The final character set used in all experiments is provided in:
+- `robustness/CharSelection/alphabet.txt`
+
+Main scripts:
+- `getCharList.py` — Enumerates candidate characters from Cc and Cf.
+- `embed.py` — Generates reference texts for invisibility testing.
+
+### LLM API robustness
+
+The `robustness/TestsAPI/` directory evaluates whether invisible watermarks are
+preserved when texts are processed through different LLM APIs.
+
+- `DeepSeek/` — Tests robustness under the DeepSeek API.
+- `LeChatAPI/` — Tests robustness under the LeChat API.
+- `chatGPTAPI/` — Tests robustness under the ChatGPT API.
+
+For each API, experiments include:
+- `*FromTxt` — Sending watermarked texts directly to the API.
+- `*repetition` — Testing repeated API interactions.
+
+### PDF conversion robustness
+
+The `robustness/toPdf/` directory evaluates the preservation of invisible Unicode
+characters under PDF generation and text extraction.
+
+Experiments include:
+- Direct PDF generation using Python.
+- Text extraction using Python-based PDF parsers.
+- Manual copy/paste from different PDF viewers.
+
+Results show that preservation strongly depends on the font and PDF generation
+method, with direct Python-based PDF generation providing the best overall
+preservation.
+
+
+### Tokenizer robustness
+
+The `robustness/tokenizer/` directory analyzes how invisible Unicode characters
+are tokenized by different tokenizers.
+
+- `tokenize_all.py` — Runs tokenization for all tested tokenizers.
+- `aggregate_tokenization.py` — Aggregates tokenization statistics into CSV files.
+- `plot_*.py` — Generates figures comparing tokenization behaviors.
+- `*.csv` / `*.png` — Aggregated results and visualization outputs.
+
 ### Web interface robustness
 
 The `robustness/web/` directory evaluates whether invisible Unicode characters
@@ -113,17 +167,6 @@ are preserved under common web platforms through typical user actions
 - `wikiCopyPaste/` — Tests copy/paste behavior from Wikipedia.
 - `redditSrcCode/` — Inspects invisible characters in Reddit HTML source.
 - `wikiSrcCode/` — Inspects invisible characters in Wikipedia HTML source.
-
-### Tokenizer robustness
-
-The `robustness/tokenizer/` directory analyzes how invisible Unicode characters
-are tokenized by different tokenizers.
-
-- `tokenize_all.py` — Runs tokenization for all tested tokenizers.
-- `aggregate_tokenization.py` — Aggregates tokenization statistics into CSV files.
-- `plot_*.py` — Generates figures comparing tokenization behaviors.
-- `*.csv` / `*.png` — Aggregated results and visualization outputs.
-
 
 ## Repository structure
 
@@ -165,8 +208,46 @@ Invisible-Watermark/
 │   └── README.md
 └── robustness/              # Robustness on non-adversarial transformations
     ├── CharSelection/
+    │   ├── alphabet.txt
+    │   ├── embed.py
+    │   ├── finalList.txt
+    │   ├── getCharList.py
+    │   ├── getCharList.txt
+    │   ├── invisible_unicode_characters.csv
+    │   └── readme.md
     ├── TestsAPI/
+    │   ├── DeepSeek/
+    │   │   ├── DSFromTxt
+    │   │   ├── DSrepeat
+    │   │   └── readme.md
+    │   ├── LeChatAPI/
+    │   │   ├── LeChatFromTxt
+    │   │   ├── LeChatrepetition
+    │   │   └── readme.md
+    │   ├── chatGPTAPI/
+    │   │   ├── ChatGPTfromTxt
+    │   │   ├── ChatGPTrepetition
+    │   │   └── readme.md
+    │   └── README.md
     ├── toPdf/
+    │   ├── create_pdf20.py
+    │   ├── test_create_pdf.py
+    │   ├── pdf2txt.py
+    │   ├── pdf2txt/
+    │   │   ├── CopyPasteAcrobat/
+    │   │   ├── CopyPasteChrome/
+    │   │   ├── CopyPasteEvince/
+    │   │   ├── CopyPasteFirefox/
+    │   │   ├── CopyPasteFirefoxWindows/
+    │   │   ├── CopyPasteGmail/
+    │   │   └── readme.md
+    │   ├── char_all.pdf
+    │   ├── char_all.txt
+    │   ├── char_select.pdf
+    │   ├── char_select.txt
+    │   ├── char_select_lo.pdf
+    │   ├── char_select_lo.txt
+    │   └── readme.md
     ├── tokenizer/
     │   ├── Bert/
     │   │   ├── test_bert.py
