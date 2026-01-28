@@ -1,61 +1,70 @@
-Test with pdf conversion, extraction of characters is done through python extraction.
+# PDF Conversion and Character Extraction Experiments
 
-Takeaway: export/print preservation depends on font. 2 or 4 preservation with the 2 tested.
+This directory contains experiments evaluating the preservation of invisible Unicode characters under PDF conversion workflows.  
+Character extraction is performed exclusively through Python-based PDF parsing.
 
-Edition is a failure, except with draw where "\uFE00\uFE0F\u034F" are preserved.
+## Key Takeaways
 
-Generating the pdf directly is pretty good, only     "\u061C\u2066\u2069" is lost
+- Preservation during export or print operations strongly depends on the font used.
+- Across the two tested fonts, only 2 to 4 characters are preserved.
+- Editing PDF files generally fails to preserve invisible characters, except when using drawing tools, where the sequence "\uFE00\uFE0F\u034F" is preserved.
+- Direct PDF generation via Python performs well overall; only the characters "\u061C\u2066\u2069" are consistently lost.
 
-## Txt files
+## Text Files
 
-invisible_text.txt, the one generated previously
-invisible_text_font.odt, same but in Deja Vu Sans
+- `invisible_text.txt`  
+  The previously generated invisible-character text.
 
-## Python scripts
+- `invisible_text_font.odt`  
+  Same content rendered using the DejaVu Sans font.
+
+## Python Scripts
 
 ### extract_inv
-Extract text from pdf, test for invisible characters (name are hardcoded)
+
+Extracts text from PDF files and checks for the presence of invisible Unicode characters.  
+The list of tested characters is hardcoded.
 
 ### test_pdf
-Create the invisible text in txt and as pdf
 
-### test_creat_pdf
-Create pdf with a "good" font
+Generates the invisible-character text both as a plain text file and as a PDF.
 
-## PDF files
+### test_create_pdf
 
-### Invisible text 
+Generates PDF files using a font known to preserve invisible characters more reliably.
 
-Created from python directly (test_pdf) with helvetica
-Only U+200C and U+200D are preserved
+## PDF Files
+
+### Invisible text
+
+Created directly via Python (`test_pdf`) using the Helvetica font.  
+Only U+200C and U+200D are preserved.
 
 ### Invisible chars
-Created from python (test_create_pdf) with another font
-- 13 : all characters, preserve all but "\u061C\u2066\u2069"  that appear in pdf furthermore
-- 10 : without "\u061C\u2066\u2069", preserve all, fully invisible
 
+Created via Python (`test_create_pdf`) using an alternative font.
 
+- **Set 13**: all characters included; all are preserved except "\u061C\u2066\u2069", which appear visibly in the PDF.
+- **Set 10**: excludes "\u061C\u2066\u2069"; all characters are preserved and remain fully invisible.
 
-## invisible LO-Export.pdf
+### invisible_LO-export.pdf
 
-Created by exporting Invisible Text to pdf using libreoffice.
-Only U+200C and U+200D are preserved
+Created by exporting *Invisible text* to PDF using LibreOffice.  
+Only U+200C and U+200D are preserved.
 
-## invisible_text_font_exportLO
+### invisible_text_font_exportLO.pdf
 
-Created by exporting Invisible text font to pdf using libreoffice
+Created by exporting *Invisible text font* to PDF using LibreOffice.
 
-## invisible LO-print.pdf
+### invisible_LO-print.pdf
 
-Created by printing invisible text in a document using libreoffice.
-Only U+200C and U+200D are preserved
+Created by printing *Invisible text* from LibreOffice.  
+Only U+200C and U+200D are preserved.
 
-## invisible text edited inkscape/LO draw
+### invisible_text_edited_inkscape_LO_draw.pdf
 
-invisible text pdf edited with inkscape and LO draw
+PDF edited using Inkscape and LibreOffice Draw.
 
 ## pdf2txt
 
-Contains output from copy/paste of invisible char 10 from various pdf viewer
-
-
+Contains text obtained via manual copy–paste from various PDF viewers, using *Invisible chars (Set 10)* as input.
