@@ -19,3 +19,4 @@ Invisible-Watermark/
 - baseline/       # Baseline (homoglyph) evaluation
 - TestPipeline/   # Robustness under different data pipelines
 - robustness/      # Robustness on non-adversarial transformations
+- dataset/raw     # The raw dataset for experiments
