@@ -30,12 +30,26 @@ bitsandbytes>=0.42
 numpy>=1.23
 pandas>=1.5
 scipy
+matplotlib>=3.7
+
+# =========================
+# Tokenizers / text utils
+# =========================
+tiktoken>=0.6.0
+regex
+wcwidth>=0.2.8
 
 # =========================
 # Utilities
 # =========================
 tqdm
-regex
+python-dotenv>=1.0.0
+
+# =========================
+# PDF / Document processing
+# =========================
+reportlab>=4.0.0
+PyMuPDF>=1.23.0
 
 # =========================
 # FlashAttention2
