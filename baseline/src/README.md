@@ -5,7 +5,7 @@ This folder contains **modified code for baseline evaluation**, designed to repr
 - **Baseline-style dataset generation** (homoglyph perturbation baseline)
 - **Baseline evaluation** (loss-based / unicode_properties-style scoring and outputs)
 - **Training configuration consistent with the main experiments**
-- `result-analysis` — visualization scripts for baseline experiments
+- `result-analysis` — visualization scripts **(fig.5 in the paper)** for baseline experiments
   
 The **usage pattern is identical to the main experiment code** under `src/` (same CLI style, same joblist logic, same directory conventions).
 
