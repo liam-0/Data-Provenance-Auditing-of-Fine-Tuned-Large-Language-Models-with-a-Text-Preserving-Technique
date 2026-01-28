@@ -19,3 +19,5 @@ Invisible-Watermark/
 - baseline/       # Baseline (homoglyph) evaluation
 - TestPipeline/   # Robustness under different data pipelines
 - robustness/      # Robustness on non-adversarial transformations
+
+Datasets are available at https://osf.io/rbdup/overview?view_only=5bd2e2c9180343009d1bf765fe3adef0.
