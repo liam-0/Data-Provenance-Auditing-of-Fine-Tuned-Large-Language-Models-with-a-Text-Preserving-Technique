@@ -1,70 +1,77 @@
+# Robustness to Passive Transformations
+Scripts, utilities, and experimental results.
 
-Scripts, Utils & results for robustness to passive transformation evaluation.
+This directory contains scripts, utilities, and results for evaluating the robustness of invisible Unicode characters under passive transformations, including document format conversion, public APIs, and web platforms.
 
-# Takeaway
+## Key Takeaways
 
-All control and format unicode char were tested for invisibility, 130 were selected for testing.
+All Unicode format and control characters were systematically evaluated for invisibility.  
+A total of 130 characters were selected for downstream experiments.
 
-## PDF
+## PDF Experiments
 
-### Creation and recovery through python
-20 of them can be embedded in a pdf.
-Those are recovered with a python script.
+### PDF creation and recovery via Python
 
-### Creation from txt doc, recovery through python
+Out of the 130 selected characters, 20 can be embedded into PDF files and subsequently recovered using a Python-based extraction script.
 
-2 of them are preserved when converting from txt to pdf.
+### PDF creation from plain text and recovery via Python
 
-### PDF to Text
+When converting from a plain text (.txt) document to PDF, 2 characters are preserved and can be recovered through Python-based extraction.
 
-Trying to copy/paste characters from pdf viewer rather than through python script.
-Highly depends on the viewer, up to 20 preserved
+### PDF to text (copy–paste)
+
+This experiment evaluates recovery via manual copy–paste from a PDF viewer rather than programmatic extraction.  
+The preservation rate is highly dependent on the PDF viewer used, with up to 20 characters preserved in the best case.
 
 ## Public APIs
-ChatGPT regurgitates 32 of them when given as input or reading from a txt.
-Le Chat regurgitates all 130 when given as input, repeat all of them defanged from a txt 
-DeepSeek regurgitates all 130 when given as input or reading from a txt, 0 from pdf.
 
+We evaluated character preservation when interacting with publicly available language model APIs:
 
-## Web
+- ChatGPT regurgitates 32 characters when provided as direct input or when reading from a text file.
+- Le Chat regurgitates all 130 characters when provided as direct input, and preserves all of them when reading from a defanged text file.
+- DeepSeek regurgitates all 130 characters when provided as direct input or when reading from a text file, but none when the source is a PDF.
 
-130 are preserved on git, wikipedia and linkedin. The code source may show them in html or defanged.
+## Web Platforms
 
+All 130 characters are preserved on common web platforms, including GitHub, Wikipedia, and LinkedIn.  
+Depending on the platform, the characters may appear either directly in the rendered HTML or in a defanged representation within the source code.
 
-# Scripts
+## Scripts
 
-## comparChar.py
+### comparChar.py
 
-Load a text given in input, compare the common invisible characters between the given text and myText. Count them and provide the list in common_characters.csv
+Loads an input text file and compares invisible Unicode characters against a reference text (myText.txt).  
+The script counts overlapping characters and outputs the results to common_characters.csv.
 
-# Files 
+## Files
 
-## myText.txt 
+### myText.txt
 
-Used for recognition/preservation tests. Contains the 130 tested characters, between "A" and "B".
+Reference text used for recognition and preservation experiments.  
+Contains the 130 tested Unicode characters inserted between the characters “A” and “B”.
 
-## alphabet.txt
+### alphabet.txt
 
-The alphabet used in Paper Section 4.
+Defines the Unicode alphabet used in Section 4 of the paper.
 
-# Folders
+## Folders
 
-## CharSelection
+### CharSelection
 
-Scripts and output of all format/control unicode characters, list of final characters
+Scripts and outputs related to the enumeration of Unicode format and control characters, including the final selected character set.
 
-## Test API
-Contains tests with chatbot GUI
+### Test_API
 
-## toPdf
+Experiments conducted using chatbot graphical user interfaces.
 
-Test with pdf conversion and recovery
+### toPdf
 
-## Web
+Experiments involving PDF generation and character recovery.
 
-Test recovery on website
+### Web
 
-## tokenizer
+Experiments evaluating character preservation on web platforms.
 
-Test tokenizers behavior
+### tokenizer
 
+Experiments analyzing tokenizer behavior with invisible Unicode characters.
