@@ -13,7 +13,7 @@ This repository contains **Python-only** scripts to:
 - `alphabet.txt` — zero-width alphabet (one `U+...` code point per line) used by both generation and probing  
 - `train_fast_full.py` — offline LoRA fine-tuning (local model path only)  
 - `probe_watermarks_batch_fast.py` — batched probing (generation + ZW extraction/matching)
-- `result-analysis` — visualization scripts for experiment 1-3
+- `result-analysis` folder — visualization scripts for experiment 1-3 **(fig.2, 3, 4, and 6 in the paper)**
 
 ---
 
