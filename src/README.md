@@ -263,7 +263,7 @@ export HF_TOKEN="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 python3 watermark.py   --source cnn_news   --train-size-total 1000   --num-users 1   --wm-per-user 100   --seed 123   --version XP1-T1000_U1_P100_seed123   --output-dir-root ./data   --max-wm-per-user 200   --max-tokens 0
 
 # 2) Train (offline)
-python3 train_fast_full.py   --model_path ./models/base_model   --data_base ./data   --wm_version XP1-T1000_U1_P100_seed123   --model_tag model_A   --seed 42   --deterministic
+python3 train_fast_full.py   --model_path ./models/base_model   --data_base ./data   --wm_version XP1-T1000_U1_P100_seed123   --model_tag model_A   --seed 42   --deterministic  --use_fa2
 
 # 3) Probe
 python3 probe_watermarks_batch_fast.py   --data_base ./data   --wm_version XP1-T1000_U1_P100_seed123   --model_id ./models/base_model   --adapter_path ./data/outputs/model_A/lora-single-XP1-T1000_U1_P100_seed123-seed42/final_adapter   --batch-size 4   --skip_if_exists 0
