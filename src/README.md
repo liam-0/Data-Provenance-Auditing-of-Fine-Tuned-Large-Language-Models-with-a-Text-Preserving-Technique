@@ -49,6 +49,9 @@ For a given `--output-dir-root <ROOT>` and `--version <VERSION>`, the script wri
 - `--wm-per-user INT` (default: `50`)
 - `--test-wm-ratio FLOAT` (default: `0.5`) *(currently unused for output)*
 - `--seed INT` (default: `42`)
+- `--wm-offset INT` (default: `0`)  
+  Global offset applied to per-user watermark RNG seeds.  
+  Changes watermark strings **without changing which texts are watermarked**.
 - `--version STR` (default: `xp2-2K`)
 - `--blog1k-csv PATH` (default: `dataset/raw/blog1000.csv` relative to repo)
 - `--gutenberg-csv PATH` (default: `dataset/raw/Gutenberg.csv`)
@@ -64,6 +67,47 @@ For a given `--output-dir-root <ROOT>` and `--version <VERSION>`, the script wri
 If `--max-tokens > 0`, the script currently loads a tokenizer from `"meta-llama/Llama-2-7b-hf"` for token counting.
 This may require internet access unless that tokenizer is cached locally. If you want fully offline generation, set:
 - `--max-tokens 0` (disables token filtering)
+
+### Important note about `--wm-offset`
+
+The `--wm-offset` argument controls the **per-user watermark generation only**.
+
+Concretely, it adds a global integer offset to the RNG seed used to generate
+each user's `(wm_first, wm_second)` pair.
+
+This allows changing watermark content **without changing dataset sampling** for each experiment.
+
+Specifically:
+
+**What changes**
+- The actual zero-width watermark strings inserted into text.
+- Each user receives a different watermark pattern for different offsets.
+
+**What does NOT change**
+- Which texts are selected for training.
+- Which texts are assigned to each user.
+- The total number of watermarked / non-watermarked samples.
+
+In other words, `--wm-offset` guarantees:
+> *the set of watermarked documents is identical, but the embedded watermarks differ.*
+
+### Example
+
+```bash
+# Same watermarked rows, but different watermark strings
+python3 watermark.py \
+  --source cnn_news \
+  --train-size-total 1000 \
+  --num-users 1 \
+  --wm-per-user 100 \
+  --seed 123 \
+  --wm-offset 1 \
+  --version XP1-T1000_U1_P100_seed123_offset1 \
+  --output-dir-root ./data \
+  --max-wm-per-user 200 \
+  --max-tokens 0
+```
+
 
 ### Example (recommended, offline-friendly)
 Generate a dataset version under `./data/<VERSION>/...`:
