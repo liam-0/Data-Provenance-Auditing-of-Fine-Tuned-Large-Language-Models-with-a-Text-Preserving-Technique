@@ -22,20 +22,19 @@ Detection / evaluation: `src/probe_watermarks_batch_fast.py`
 
 Scripts in `src/result-analysis/` are used to generate the figures reported for our method:
 
-- Experiment 1: `src/result-analysis/plot_xp1.py`  
-  (Figure 2)
+- Experiment 4.2 (Figure 2): `src/result-analysis/plot_xp1.py`  
+  
 
-- Experiment 2: `src/result-analysis/plot_xp2.py`  
-  (Figure 3)
+- Experiment 4.3 (Figure 2): `src/result-analysis/plot_xp2.py`  
 
-- Experiment 3: `src/result-analysis/plot_xp3.py`  
-  (Figures 4 and 6)
+- Experiment 4.4 (Figures 4 and 6): `src/result-analysis/plot_xp3.py`  
+  
 
 - Seed stability: `src/result-analysis/summary_seed_stability.py`  
   This script aggregates results across different random seeds and produces
   a CSV file for statistical analysis.
 
-## Baseline (Figures 5) analysis and plotting
+## Baseline (Experiment 4.6, Figures 5) analysis and plotting
 
 Baseline experiments follow the same training and evaluation pipeline as our method,
 with only the watermarking mechanism replaced.
@@ -50,8 +49,7 @@ In particular:
 
 Scripts in `baseline/src/result-analysis/` are used to generate baseline figures:
 
-- Baseline plots: `baseline/src/result-analysis/plot_unicode_properties.py`  
-  (Figure 5)
+- Baseline plots (Experiment 4.6, Figures 5): `baseline/src/result-analysis/plot_unicode_properties.py`  
 
 - Baseline summary: `baseline/src/result-analysis/summarize_unicode_properties_pa.py`  
   This script aggregates baseline results and produces CSV files for comparison.
