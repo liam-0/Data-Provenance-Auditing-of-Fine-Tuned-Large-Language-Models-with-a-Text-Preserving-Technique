@@ -73,13 +73,15 @@ python summary_seed_stability.py \
 
 ---
 
-## 2. Aggregation and plotting across users (For the first three experiments in the paper, for baseline, refer to the baseline folder)
+## 2. Aggregation and plotting across users (For the first three experiments in the paper (fig.2, 3, 4, 6), for baseline, refer to the baseline folder)
 
 This repository provides three plotting scripts with the same input interface but different aggregation logic and visualization styles.
 
-### plot_xp1.py
+### plot_xp1.py 
+**(fig.2)**
 
 **Purpose.** Produces a single-column **1×3 multi-panel figure** (one panel per dataset), showing regurgitation **rate** as a function of the number of watermarked documents (P).
+
 
 **What it does.**
 
@@ -108,6 +110,7 @@ This repository provides three plotting scripts with the same input interface bu
 **Typical output.** One figure (PNG/PDF) in `plots_combined/` with multiple curves (models × datasets).
 
 ### plot_xp2.py
+**(fig.3)**
 
 **Purpose.** Produces a multi-panel (1×3) figure, one panel per dataset, showing regurgitation **rate** as a function of training set size (T).
 
@@ -121,6 +124,7 @@ This repository provides three plotting scripts with the same input interface bu
 **Typical output.** One 1×3 figure (PNG/PDF) in `plots/`, with independent x-axes for each dataset.
 
 ### plot_xp3.py
+**(fig.4 and fig.6)**
 
 **Purpose.** Generates a main single-column 1×3 figure (one panel per dataset) **plus** a set of appendix figures, analyzing regurgitation rate as a function of the number of unique watermarks (U).
 
