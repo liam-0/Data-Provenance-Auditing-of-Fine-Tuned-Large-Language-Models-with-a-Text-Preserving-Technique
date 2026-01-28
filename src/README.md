@@ -1,4 +1,4 @@
-# README (Anonymized Artifact)
+# README
 
 This repository contains **Python-only** scripts to:
 1) generate zero-width (ZW) watermark datasets,  
