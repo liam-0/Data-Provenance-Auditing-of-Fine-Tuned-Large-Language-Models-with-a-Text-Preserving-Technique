@@ -1,49 +1,59 @@
-Selection invisible characters for testing. All characters of the general categories Cc — Other, control and Cf — Other, format where tested.
-Those that were invisible on the terminal, txt (gedit) and csv (libreoffice) were kept.
+# Invisible Unicode Character Selection
 
-# Python scripts
+This directory documents the selection process for invisible Unicode characters used in the experiments.
 
-## getCharList
+All characters belonging to the general categories **Cc (Other, Control)** and **Cf (Other, Format)** were initially evaluated.  
+Characters that were visually invisible across multiple environments—including terminal output, plain text files (Gedit), and CSV files (LibreOffice)—were retained for testing.
 
-Print all character from categories Cc and Cf with their code, name and width. Nota: width is not trustworthy.
+## Python Scripts
 
-## embed
+### getCharList
 
-Create the text "A" + all unicode characters appearing in finalList.txt +"B"
+Enumerates all Unicode characters from categories Cc and Cf, printing their:
+- Code point
+- Unicode name
+- Display width
+
+**Note:** The reported display width is indicative only and should not be considered fully reliable.
+
+### embed
+
+Generates a reference text of the form:
+
+"A" + all unicode characters appearing in finalList.txt +"B"
 
 
-# Outputs
+This text is used to visually and programmatically evaluate character invisibility and preservation.
 
-## getCharList.txt
+## Outputs
 
-Redirection of the output (terminal) of getCharList
+### getCharList.txt
 
-## invisible_unicode_characters.csv
+Terminal output redirected from `getCharList`, listing all candidate Unicode characters along with their metadata.
 
-All the characters with their width, name and code printed as csv
+### invisible_unicode_characters.csv
 
-# File finalList.txt
+CSV file containing all tested characters, including their code points, names, and reported display widths.
 
-Created from getCharList.txt while removing every line where the inclusion of the character had a visible impact
+## Files
 
-# File alphabet.txt
+### finalList.txt
 
-Similar to finalList.txt from which bidi characters are further excluded:
-U+061C  ARABIC LETTER MARK
+Derived from `getCharList.txt` by removing all characters whose inclusion produced any visible effect in the tested environments.
 
-U+2066 (LRI)
+### alphabet.txt
 
-U+2068 (FSI)
+Derived from `finalList.txt`, with additional exclusion of bidirectional control characters to avoid rendering side effects.  
+The following characters are explicitly excluded:
 
-U+2069 (PDI)
+- U+061C — ARABIC LETTER MARK  
+- U+2066 — LEFT-TO-RIGHT ISOLATE (LRI)  
+- U+2068 — FIRST STRONG ISOLATE (FSI)  
+- U+2069 — POP DIRECTIONAL ISOLATE (PDI)  
+- U+202A — LEFT-TO-RIGHT EMBEDDING (LRE)  
+- U+202C — POP DIRECTIONAL FORMATTING (PDF)  
+- U+202D — LEFT-TO-RIGHT OVERRIDE (LRO)  
+- U+200E — LEFT-TO-RIGHT MARK  
+- U+200F — RIGHT-TO-LEFT MARK
 
-U+202A (LRE)
-
-U+202C (PDF)
-
-U+202D (LRO)
-
-U+200E  LEFT-TO-RIGHT MARK 
-
-U+200F  RIGHT-TO-LEFT MARK 
 
