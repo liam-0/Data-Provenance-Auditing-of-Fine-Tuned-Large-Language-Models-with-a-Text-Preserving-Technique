@@ -19,6 +19,9 @@ web metadata or large-scale distributed execution.
 For a comprehensive explanation of the data preparation pipeline and its experimental setup, please refer to:
 Description and Technical Details of the Data Preparation Pipeline Experiments.pdf
 
+**We recommend running these scripts on Google Colab.**
+Some components require installing a specific NumPy version due to library dependency constraints, which may need a runtime restart after installation.
+
 ---
 
 ## Design Principles
