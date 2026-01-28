@@ -8,24 +8,24 @@ import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-import matplotlib as mpl
 
 # =========================
 # Matplotlib style (paper-friendly)
 # =========================
-mpl.rcParams["pdf.fonttype"] = 42
+import matplotlib as mpl
+mpl.rcParams["pdf.fonttype"] = 42  # TrueType in PDF
 mpl.rcParams["ps.fonttype"] = 42
+
 mpl.rcParams.update({
-    "font.size": 9,
-    "axes.labelsize": 9,
-    "axes.titlesize": 9,
-    "legend.fontsize": 8,
-    "legend.title_fontsize": 8,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "lines.linewidth": 1.6,
-    "lines.markersize": 4.5,
+    "font.size": 8.0,
+    "axes.labelsize": 8.0,
+    "axes.titlesize": 8.5,
+    "legend.fontsize": 7.5,
+    "legend.title_fontsize": 7.5,
+    "xtick.labelsize": 7.5,
+    "ytick.labelsize": 7.5,
+    "lines.linewidth": 1.2,
+    "lines.markersize": 3.2,
 })
 
 try:
@@ -36,205 +36,274 @@ except Exception:
 
 
 # =========================
-# Display-name mappings
+# Parsers
 # =========================
-MODEL_DISPLAY = {
-    "mistral": "Mistral",
-    "llama": "LLaMA",
-}
-
-DATASET_DISPLAY = {
-    "blog1k": "Blog1k",
-    "poems": "Poems",
-    "cnn_dailymail": "News",
-}
-
-
-# =========================
-# Helpers
-# =========================
-def parse_P(config):
-    m = re.search(r"_P(\d+)", str(config))
+def parse_P(config: str):
+    """Extract P from config like: ..._P40_... -> 40"""
+    m = re.search(r"(?:^|_)P(\d+)(?:_|$)", str(config))
     return int(m.group(1)) if m else np.nan
 
 
-def parse_user_from_filename(path):
-    m = re.search(r"_1_(\d+)\.csv$", os.path.basename(path))
-    return int(m.group(1)) if m else None
-
-
-def normalize_model_name(s: str) -> str:
-    s = s.lower()
+def normalize_model_name(model_raw: str) -> str:
+    """Map raw model strings into {mistral, llama}."""
+    s = str(model_raw).lower()
     if "mistral" in s:
         return "mistral"
     if "llama" in s:
         return "llama"
-    if "gpt-oss" in s:
-        return "gpt-oss"
-    return s
+    return str(model_raw)
 
 
-def normalize_dataset_name(s: str) -> str:
-    s = s.lower()
+def normalize_dataset_name(ds_raw: str) -> str:
+    """Map raw dataset strings into {blog1k, poems, cnn_dailymail}."""
+    s = str(ds_raw).lower()
     if s in {"blog1k", "blog_1k", "blog"}:
         return "blog1k"
     if s in {"poems", "poetry"}:
         return "poems"
     if s in {"cnn_dailymail", "cnn", "cnn_news", "cnn-dailymail"}:
         return "cnn_dailymail"
-    return s
+    return str(ds_raw)
 
 
-def tcrit(conf, dof):
+# =========================
+# CI helper
+# =========================
+def tcrit_two_sided(conf_level: float, dof: int) -> float:
+    """Two-sided t critical value: t_{1-alpha/2, dof}"""
     if dof <= 0:
         return np.nan
+    alpha = 1.0 - conf_level
     if _HAVE_SCIPY:
-        return float(student_t.ppf(1 - (1 - conf) / 2, dof))
+        return float(student_t.ppf(1.0 - alpha / 2.0, dof))
+
+    # Fallback normal approx
+    if abs(alpha - 0.05) < 1e-12:
+        return 1.96
+    if abs(alpha - 0.10) < 1e-12:
+        return 1.645
+    if abs(alpha - 0.01) < 1e-12:
+        return 2.576
     return 1.96
 
 
-def ensure_dir(p):
-    os.makedirs(p, exist_ok=True)
-
-
-# =========================
-# Main
-# =========================
 def main():
     ap = argparse.ArgumentParser()
+
     ap.add_argument("--input_dir", default=".")
-    ap.add_argument("--pattern", default="GLOBAL_user_seed_second_match_summary_1_*.csv")
+    ap.add_argument(
+        "--pattern",
+        default="GLOBAL_user_seed_second_match_summary_1_*.csv",
+        help="Glob pattern for per-user CSV files.",
+    )
     ap.add_argument("--out_dir", default="analysis_out")
     ap.add_argument("--min_users", type=int, default=2)
-    ap.add_argument("--ci", type=float, default=0.95)
-    ap.add_argument("--png_dpi", type=int, default=600)
+    ap.add_argument("--ci", type=float, default=0.95, help="e.g. 0.95 for 95%% CI.")
 
-    ap.add_argument("--exclude_gpt_oss", action="store_true")
-    ap.add_argument("--ci_cap", type=float, default=None)
-    ap.add_argument("--ci_cap_to_P", action="store_true")
-    ap.add_argument(
-        "--y_mode",
-        choices=["count", "rate"],
-        default="count",
-        help="Y-axis mode: count or rate.",
-    )
+    # Single-column export settings
+    ap.add_argument("--fig_width_in", type=float, default=3.25)
+    ap.add_argument("--dpi", type=int, default=300)
 
     args = ap.parse_args()
+    if not (0.0 < args.ci < 1.0):
+        raise SystemExit("--ci must be in (0,1), e.g. 0.95")
 
-    plot_dir = os.path.join(args.out_dir, "plots_combined")
-    ensure_dir(plot_dir)
+    # anonymized output folder name
+    plot_dir = os.path.join(args.out_dir, "plots")
+    os.makedirs(plot_dir, exist_ok=True)
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    MODEL_DISPLAY = {
+        "llama": "LLaMA",
+        "mistral": "Mistral",
+    }
+    DATASET_DISPLAY = {
+        "cnn_dailymail": "News",
+        "blog1k": "Blog1k",
+        "poems": "Poems",
+    }
 
     # ---------- load data ----------
+    paths = sorted(glob.glob(os.path.join(args.input_dir, args.pattern)))
+    if not paths:
+        raise SystemExit(f"No files found: {os.path.join(args.input_dir, args.pattern)}")
+
     frames = []
-    for p in sorted(glob.glob(os.path.join(args.input_dir, args.pattern))):
-        user = parse_user_from_filename(p)
-        if user is None:
-            continue
-        df = pd.read_csv(p)
-        df["user"] = user
+    for p in paths:
+        df = pd.read_csv(p).copy()
+
+        need = {
+            "dataset",
+            "model",
+            "config",
+            "user_id",
+            "n_seeds",
+            "mean_second_match",
+            "var_second_match",
+        }
+        missing = need - set(df.columns)
+        if missing:
+            raise ValueError(f"[{p}] missing columns: {missing}")
+
         df["P"] = df["config"].apply(parse_P)
         df["mean_second_match"] = pd.to_numeric(df["mean_second_match"], errors="coerce")
+
         df["model"] = df["model"].apply(normalize_model_name)
         df["dataset"] = df["dataset"].apply(normalize_dataset_name)
+
         frames.append(df)
 
-    df = pd.concat(frames, ignore_index=True)
-    df = df.dropna(subset=["P", "mean_second_match"])
-
-    if args.exclude_gpt_oss:
-        df = df[df["model"] != "gpt-oss"]
+    df_all = pd.concat(frames, ignore_index=True)
+    df_all = df_all.dropna(subset=["dataset", "model", "P", "user_id", "mean_second_match"])
 
     model_order = ["mistral", "llama"]
     dataset_order = ["blog1k", "poems", "cnn_dailymail"]
+    df_all = df_all[df_all["model"].isin(model_order) & df_all["dataset"].isin(dataset_order)].copy()
 
-    # ---------- aggregate + CI ----------
-    g = df.groupby(["dataset", "model", "P"])
-    agg = g["mean_second_match"].agg(
-        n="count",
-        mean="mean",
-        std=lambda x: np.std(x, ddof=1) if len(x) >= 2 else 0.0
+    # ---------- aggregate across users at each (dataset, model, P) ----------
+    g = df_all.groupby(["dataset", "model", "P"], dropna=False)
+
+    def std_ddof1(a: np.ndarray) -> float:
+        return float(np.std(a, ddof=1)) if len(a) >= 2 else 0.0
+
+    agg = g.agg(
+        n_users=("user_id", "count"),
+        mean_ratio=("mean_second_match", "mean"),
+        std_ratio=("mean_second_match", lambda s: std_ddof1(s.to_numpy())),
     ).reset_index()
 
-    agg = agg[agg["n"] >= args.min_users]
-    tvals = np.array([tcrit(args.ci, n - 1) for n in agg["n"]])
+    agg = agg[agg["n_users"] >= args.min_users].copy()
 
-    if args.y_mode == "count":
-        agg["y"] = agg["mean"] * agg["P"]
-        half = tvals * (agg["std"] / np.sqrt(agg["n"])) * agg["P"]
-        agg["ci_low"] = np.maximum(0, agg["y"] - half)
-        agg["ci_high"] = agg["y"] + half
-        if args.ci_cap_to_P:
-            agg["ci_high"] = np.minimum(agg["ci_high"], agg["P"])
-        if args.ci_cap is not None:
-            agg["ci_high"] = np.minimum(agg["ci_high"], args.ci_cap)
-    else:
-        agg["y"] = agg["mean"]
-        half = tvals * (agg["std"] / np.sqrt(agg["n"]))
-        agg["ci_low"] = np.maximum(0.0, agg["y"] - half)
-        agg["ci_high"] = np.minimum(1.0, agg["y"] + half)
+    # y-axis = rate
+    agg["y"] = agg["mean_ratio"]
 
-    # ---------- plot ----------
-    fig, ax = plt.subplots(figsize=(3.5, 2.6))
-    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-    model_color = {"mistral": colors[0], "llama": colors[1]}
-    line_style = {"blog1k": "-", "poems": "--", "cnn_dailymail": "-."}
-    marker = {"blog1k": "o", "poems": "s", "cnn_dailymail": "^"}
+    # t-based CI on rate
+    n = agg["n_users"].to_numpy()
+    dof = n - 1
+    tcrit = np.array([tcrit_two_sided(args.ci, int(d)) for d in dof], dtype=float)
+    se = agg["std_ratio"].to_numpy() / np.sqrt(n)
+    half = tcrit * se
+    agg["ci_low"] = (agg["y"] - half).clip(lower=0.0)
+    agg["ci_high"] = (agg["y"] + half).clip(upper=1.0)
 
-    for model in model_order:
-        for ds in dataset_order:
-            d = agg[(agg["model"] == model) & (agg["dataset"] == ds)]
-            if d.empty:
+    out_csv = os.path.join(args.out_dir, "agg_by_dataset_model_P_user_CI_rate.csv")
+    agg.to_csv(out_csv, index=False)
+
+    # ---------- plotting ----------
+    width = args.fig_width_in
+    height = 2.2
+    fig, axes = plt.subplots(
+        1, len(dataset_order),
+        figsize=(width, height),
+        sharex=False,
+        sharey=True,
+    )
+    if len(dataset_order) == 1:
+        axes = [axes]
+
+    color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    model_colors = {
+        "mistral": color_cycle[0 % len(color_cycle)],
+        "llama":   color_cycle[1 % len(color_cycle)],
+    }
+
+    # Put legend on the middle panel by default (can be changed)
+    legend_ax = axes[1] if len(axes) >= 2 else axes[0]
+
+    for ax, dataset in zip(axes, dataset_order):
+        # dataset-specific P ticks
+        Ps = sorted(agg.loc[agg["dataset"] == dataset, "P"].unique().tolist())
+        if Ps:
+            MAX_TICKS = {
+                "blog1k": 5,
+                "poems": 4,
+                "cnn_dailymail": 5,
+            }
+            max_ticks = MAX_TICKS.get(dataset, 4)
+
+            if len(Ps) <= max_ticks:
+                show_Ps = Ps
+            else:
+                idx = np.linspace(0, len(Ps) - 1, max_ticks).astype(int)
+                show_Ps = [Ps[i] for i in idx]
+
+            ax.set_xticks(show_Ps)
+
+            def fmt_p(p):
+                return f"{p/1000:g}k" if p >= 1000 else str(int(p))
+
+            ax.set_xticklabels([fmt_p(p) for p in show_Ps])
+
+        for model in model_order:
+            df_md = agg[(agg["model"] == model) & (agg["dataset"] == dataset)]
+            if df_md.empty:
                 continue
-            d = d.sort_values("P")
+
+            df_md = df_md.sort_values("P")
+            x = df_md["P"].to_numpy()
+            y = df_md["y"].to_numpy()
+            lo = df_md["ci_low"].to_numpy()
+            hi = df_md["ci_high"].to_numpy()
+
             ax.plot(
-                d["P"], d["y"],
-                color=model_color[model],
-                linestyle=line_style[ds],
-                marker=marker[ds],
+                x, y,
+                marker="o",
+                linewidth=1.1,
+                markersize=3.0,
+                color=model_colors[model],
+                label=MODEL_DISPLAY.get(model, model),
             )
             ax.fill_between(
-                d["P"], d["ci_low"], d["ci_high"],
-                color=model_color[model],
-                alpha=0.12,
-                linewidth=0
+                x, lo, hi,
+                color=model_colors[model],
+                alpha=0.18,
+                linewidth=0,
             )
 
-    ax.set_xlabel("Number of watermarked documents")
-    ax.set_ylabel("Regurgitation rate" if args.y_mode == "rate"
-                  else "Number of regurgitated replies")
-    ax.grid(True, alpha=0.25)
+        ax.set_title(DATASET_DISPLAY.get(dataset, dataset), pad=1.5)
+        ax.grid(True, alpha=0.25)
 
-    # legends
-    model_handles = [
-        Line2D([0], [0], color=model_color[m], lw=2, label=MODEL_DISPLAY[m])
-        for m in model_order
-    ]
-    leg1 = ax.legend(handles=model_handles, title="Model",
-                     loc="upper left", frameon=False)
-    ax.add_artist(leg1)
+    axes[0].set_ylabel("Regurgitation rate")
 
-    dataset_handles = [
-        Line2D([0], [0], color="0.4", lw=1.8,
-               linestyle=line_style[d], marker=marker[d],
-               label=DATASET_DISPLAY[d])
-        for d in dataset_order
-    ]
-    ax.legend(handles=dataset_handles, title="Dataset",
-              loc="lower right", frameon=False)
+    # lock layout first (legend should not affect spacing)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.88])
 
-    fig.tight_layout(pad=0.2)
+    # then add legend without participating in layout
+    handles, labels = legend_ax.get_legend_handles_labels()
+    if handles:
+        leg = legend_ax.legend(
+            handles,
+            labels,
+            loc="lower right",
+            bbox_to_anchor=(1.06, 0.02),
+            bbox_transform=legend_ax.transAxes,
+            frameon=True,
+            fontsize=6.5,
+            handlelength=1.2,
+            handletextpad=0.4,
+            borderpad=0.20,
+            labelspacing=0.15,
+            framealpha=0.85,
+            facecolor="white",
+        )
+        leg.set_in_layout(False)
 
-    suffix = "count" if args.y_mode == "count" else "rate"
-    out_png = os.path.join(plot_dir, f"singlecol_CI95_{suffix}.png")
-    out_pdf = os.path.join(plot_dir, f"singlecol_CI95_{suffix}.pdf")
+    tag = f"CI{int(args.ci*100)}"
+    out_png = os.path.join(plot_dir, f"singlecol_1x3_indepx_P_{tag}_rate.png")
+    out_pdf = os.path.join(plot_dir, f"singlecol_1x3_indepx_P_{tag}_rate.pdf")
 
-    fig.savefig(out_png, dpi=args.png_dpi, bbox_inches="tight")
+    fig.supxlabel("Number of watermarked documents", y=0.09)
+
+    fig.savefig(out_png, dpi=args.dpi, bbox_inches="tight")
     fig.savefig(out_pdf, bbox_inches="tight")
     plt.close(fig)
 
     print("Saved:")
     print(" -", out_png)
     print(" -", out_pdf)
+    print(" -", out_csv)
+    if not _HAVE_SCIPY:
+        print("Note: scipy not found; used normal-approx critical values for CI.")
 
 
 if __name__ == "__main__":
