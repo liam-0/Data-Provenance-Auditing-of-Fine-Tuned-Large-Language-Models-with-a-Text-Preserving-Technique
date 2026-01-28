@@ -1,6 +1,6 @@
 # Baseline Visualization (Unicode Properties)
 
-This folder contains scripts used to **summarize and visualize baseline
+This folder contains scripts used to **summarize and visualize the baseline
 experiments** based on the outputs of a unicode-properties scorer.
 
 The baseline analysis does **not** involve any learned watermark
@@ -25,7 +25,7 @@ Two scripts are provided:
 
 1.  `summarize_unicode_properties.py` --- statistical summarization.
 2.  `plot_unicode_properties.py` --- visualization of z-scores across
-    datasets, models, and watermarks.
+    datasets, models, and watermarks **(fig.5 in the paper)**.
 
 ------------------------------------------------------------------------
 
@@ -84,6 +84,8 @@ python summarize_unicode_properties.py   --input_dir ./scores   --output_csv pap
 ------------------------------------------------------------------------
 
 ## 2. plot_unicode_properties.py
+
+**(fig.5)**
 
 ### Purpose
 
