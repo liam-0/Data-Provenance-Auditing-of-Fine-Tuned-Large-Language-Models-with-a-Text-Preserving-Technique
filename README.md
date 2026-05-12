@@ -8,7 +8,8 @@ The repository contains all code and scripts used in the paper, including:
 - the **main experimental pipeline**,
 - the **baseline evaluation code**,
 - robustness tests across **different data processing pipelines**,
-- and robustness tests on **non-adversarial transformations** (tokenizers, LLM APIs, web interfaces, PDF conversion, etc.).
+- robustness tests on **non-adversarial transformations** (tokenizers, LLM APIs, web interfaces, PDF conversion, etc.).
+- and robustness tests on **adversarial text transformations**.
 
 ## Entry points
 
@@ -141,6 +142,7 @@ Invisible-Watermark/
 │   ├── myText.txt
 │   ├── Description and Technical Details of the Data Preparation Pipeline Experiments.pdf
 │   └── README.md
+├── RobustnessTextTransformations/... # obustness on text transformation (details in RobustnessTextTransformations/readme.md)
 └── robustness/...              # Robustness on non-adversarial transformations (details in robustness/readme.md)
 ```
 
