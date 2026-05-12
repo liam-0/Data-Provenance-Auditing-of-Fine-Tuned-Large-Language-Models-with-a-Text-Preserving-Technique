@@ -103,6 +103,9 @@ The script:
 
 contains sample texts used for robustness testing.
 
+## Robustness on non-adversarial transformations (details in robustness/readme.md)
+Robustness analysis based on paper "MARKMYWORDS: Analyzing and Evaluating Language Model Watermarks" for both our methods and baseline.
+Further details in robustness/readme.md.
 
 ## Repository structure
 
