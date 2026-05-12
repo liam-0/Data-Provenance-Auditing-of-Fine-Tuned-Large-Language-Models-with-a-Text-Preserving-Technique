@@ -142,7 +142,7 @@ Invisible-Watermark/
 │   ├── myText.txt
 │   ├── Description and Technical Details of the Data Preparation Pipeline Experiments.pdf
 │   └── README.md
-├── RobustnessTextTransformations/... # obustness on text transformation (details in RobustnessTextTransformations/readme.md)
+├── RobustnessTextTransformations/... # Robustness on text transformation (details in RobustnessTextTransformations/readme.md)
 └── robustness/...              # Robustness on non-adversarial transformations (details in robustness/readme.md)
 ```
 
