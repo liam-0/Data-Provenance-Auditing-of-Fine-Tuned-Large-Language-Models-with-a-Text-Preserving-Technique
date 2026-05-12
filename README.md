@@ -1,6 +1,6 @@
 # Invisible-Watermark
 
-This is the **anonymous code repository** for the paper:
+This is the **code repository** for the paper:
 
 > **Data Provenance Auditing of Fine-Tuned Large Language Models with a Text-Preserving Technique**
 
