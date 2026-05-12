@@ -1,3 +1,5 @@
 dataset/raw/cnn_dm_3.0.0_train_article_8k_10k_chars.csv filter=lfs diff=lfs merge=lfs -text
 dataset/raw/*.csv filter=lfs diff=lfs merge=lfs -text
 *.csv filter=lfs diff=lfs merge=lfs -text
+RobustnessTextTransformations/output/*.jsonl filter=lfs diff=lfs merge=lfs -text
+RobustnessTextTransformations/run/static_data/encodings/*.tsv filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: apps
+Version: 1.0
+Summary: APPS code benchmark
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: License :: OSI Approved :: Apache Software License
+Requires-Python: ~=3.8
+License-File: LICENSE
