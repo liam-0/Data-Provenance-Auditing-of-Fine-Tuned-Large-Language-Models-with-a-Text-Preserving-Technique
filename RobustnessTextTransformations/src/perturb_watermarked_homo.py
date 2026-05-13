@@ -100,7 +100,7 @@ def normalize_text(text):
 
 def make_dedup_key(sample, attack):
     """
-    以 sample_id + watermarked + attack 作为去重键
+    Use sample_id + watermarked + attack as the deduplication key.
     """
     return str(
         (
@@ -275,7 +275,7 @@ def run(samples=None):
     tasks = []
     task_count = 0
 
-    # 只处理全部 is_watermarked=True 且 watermarked 不为空的样本
+    # Only process samples where is_watermarked=True and watermarked is not empty.
     for sample in samples:
         is_wm = bool(sample.get("is_watermarked", False))
         watermarked_text = sample.get("watermarked", None)
@@ -286,7 +286,7 @@ def run(samples=None):
         if watermarked_text is None:
             continue
 
-        # 保留一条 original 记录，方便后续比较
+        # Keep one original record for comparison later.
         original_key = make_dedup_key(sample, None)
         if original_key not in existing:
             raw_out = deepcopy(sample)
@@ -296,7 +296,7 @@ def run(samples=None):
             tasks.append((None, raw_out))
             task_count += 1
 
-        # 对所有 attack 全量处理
+        # Full processing of all attacks
         for attack in attack_list:
             key = make_dedup_key(sample, attack)
             if key not in existing:

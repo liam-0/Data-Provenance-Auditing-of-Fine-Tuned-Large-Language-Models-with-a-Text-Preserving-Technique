@@ -13,23 +13,21 @@ INPUT_JSONL = "output/train_perturbed.jsonl"
 DETAIL_OUTPUT_JSONL = "output/train_perturbed_wm_compare.jsonl"
 SUMMARY_OUTPUT_CSV = "output/train_perturbed_wm_summary.csv"
 
-# Statistics based on complete watermark samples
+# new：Statistics based on complete watermark samples
 ALTERATION_SUMMARY_CSV = "output/train_perturbed_wm_alteration_summary.csv"
 
 ALPHABET_FILE = "alphabet.txt"
 
-# strict: Must strictly follow the loop c1->c2->c3->c4 continuously
-
-# relaxed: Allows missing segments, but does not allow reverse or out-of-order execution
-
-# both: Counts both
+# Whether to run full paraphrase mode
+# False -> helm + swap + reduced paraphrase + synonym
+# True  -> full paraphrase attack list only
 ORDER_MODE = "both"   # "strict" / "relaxed" / "both"
 
 CLUSTER_SIZE = 4
 
 
 # =========================
-# 工具函数
+# tool functions
 # =========================
 def load_alphabet_from_txt(path: str) -> list[str]:
     alphabet = []
@@ -194,48 +192,17 @@ def wm_string_exact_match_from_clusters(cluster_seq: list[str], wm_clusters: lis
     return False
 
 
-def count_full_string_occurrences_nonoverlap(cluster_seq: list[str], wm_clusters: list[str]) -> int:
-    """
-    统计 wm_clusters 在 cluster_seq 中完整出现的次数（不允许重叠）
-    """
-    n = len(wm_clusters)
-    if n == 0 or len(cluster_seq) < n:
-        return 0
-
-    cnt = 0
-    i = 0
-    while i <= len(cluster_seq) - n:
-        if cluster_seq[i:i + n] == wm_clusters:
-            cnt += 1
-            i += n
-        else:
-            i += 1
-    return cnt
-
-
 def analyze_one_half(origin_cluster_seq: list[str], pert_cluster_seq: list[str], wm: str, cluster_size: int):
     wm_clusters = build_cycle_clusters(wm, cluster_size)
     origin_counts = count_clusters(origin_cluster_seq, wm_clusters)
     pert_counts = count_clusters(pert_cluster_seq, wm_clusters)
     count_stats = compare_counts(origin_counts, pert_counts)
 
-    origin_full_string_count = count_full_string_occurrences_nonoverlap(origin_cluster_seq, wm_clusters)
-    perturbed_full_string_count = count_full_string_occurrences_nonoverlap(pert_cluster_seq, wm_clusters)
-
     result = {
         "wm_length_chars": len(wm),
         "wm_cluster_count": len(wm_clusters),
         "wm_clusters": wm_clusters,
-
         "full_string_exact_match": wm_string_exact_match_from_clusters(pert_cluster_seq, wm_clusters),
-
-        "origin_full_string_count": origin_full_string_count,
-        "perturbed_full_string_count": perturbed_full_string_count,
-        "full_string_remaining_ratio": (
-            perturbed_full_string_count / origin_full_string_count
-            if origin_full_string_count > 0 else None
-        ),
-
         "origin_cluster_counts": origin_counts,
         "perturbed_cluster_counts": pert_counts,
         **count_stats,
@@ -257,20 +224,21 @@ def safe_half_split(text: str) -> tuple[str, str]:
 
 def classify_sample_level_alteration(compare_result: dict) -> str:
     """
-    以完整 watermark（wm_first + wm_second）为单位分类：
+    Categorization by complete watermark (wm_first + wm_second):
 
-    unchanged:
-        zws_exact_match == True
+    Unchanged:
+    zws_exact_match == True
 
-    full_suppression:
-        altered 且 perturbed_zws_count == 0
+    Full_suppression:
+    Altered and perturbed_zws_count == 0
 
-    partial_modification:
-        altered 且非 full_suppression，
-        且 wm_first / wm_second 都至少可恢复一个完整 strict cycle
+    Partial_modification:
+    Altered and not full_suppression,
 
-    altered_not_fully_recoverable:
-        altered 但不属于上面两类
+    and wm_first / wm_second can recover at least one complete strict cycle
+
+    Altered_not_fully_recoverable:
+    Altered but not belonging to the above two categories
     """
     zws_exact_match = compare_result.get("zws_exact_match") is True
     perturbed_zws_count = compare_result.get("perturbed_zws_count", 0) or 0
@@ -311,55 +279,25 @@ def analyze_origin_vs_attack(origin_text: str, perturbed_text: str, wm_first: st
     }
 
     origin_a, origin_b = safe_half_split(origin_text)
+    pert_a, pert_b = safe_half_split(perturbed_text)
+
     origin_a_zws = extract_zws_sequence(origin_a, zws_set)
     origin_b_zws = extract_zws_sequence(origin_b, zws_set)
+    pert_a_zws = extract_zws_sequence(pert_a, zws_set)
+    pert_b_zws = extract_zws_sequence(pert_b, zws_set)
 
     origin_a_clusters = split_into_clusters(origin_a_zws, CLUSTER_SIZE)
     origin_b_clusters = split_into_clusters(origin_b_zws, CLUSTER_SIZE)
+    pert_a_clusters = split_into_clusters(pert_a_zws, CLUSTER_SIZE)
+    pert_b_clusters = split_into_clusters(pert_b_zws, CLUSTER_SIZE)
 
-    # zws完全一致时，sample级比例直接记为1，不再额外匹配 perturbed side
-    if overall["zws_exact_match"]:
-        wm_first_result = analyze_one_half(origin_a_clusters, origin_a_clusters, wm_first, CLUSTER_SIZE)
-        wm_second_result = analyze_one_half(origin_b_clusters, origin_b_clusters, wm_second, CLUSTER_SIZE)
-
-        origin_full_watermark_count = min(
-            wm_first_result.get("origin_full_string_count", 0) or 0,
-            wm_second_result.get("origin_full_string_count", 0) or 0,
-        )
-        perturbed_full_watermark_count = origin_full_watermark_count
-        sample_full_watermark_remaining_ratio = 1.0 if origin_full_watermark_count > 0 else None
-
-    else:
-        pert_a, pert_b = safe_half_split(perturbed_text)
-        pert_a_zws = extract_zws_sequence(pert_a, zws_set)
-        pert_b_zws = extract_zws_sequence(pert_b, zws_set)
-
-        pert_a_clusters = split_into_clusters(pert_a_zws, CLUSTER_SIZE)
-        pert_b_clusters = split_into_clusters(pert_b_zws, CLUSTER_SIZE)
-
-        wm_first_result = analyze_one_half(origin_a_clusters, pert_a_clusters, wm_first, CLUSTER_SIZE)
-        wm_second_result = analyze_one_half(origin_b_clusters, pert_b_clusters, wm_second, CLUSTER_SIZE)
-
-        origin_full_watermark_count = min(
-            wm_first_result.get("origin_full_string_count", 0) or 0,
-            wm_second_result.get("origin_full_string_count", 0) or 0,
-        )
-        perturbed_full_watermark_count = min(
-            wm_first_result.get("perturbed_full_string_count", 0) or 0,
-            wm_second_result.get("perturbed_full_string_count", 0) or 0,
-        )
-        sample_full_watermark_remaining_ratio = (
-            perturbed_full_watermark_count / origin_full_watermark_count
-            if origin_full_watermark_count > 0 else None
-        )
+    wm_first_result = analyze_one_half(origin_a_clusters, pert_a_clusters, wm_first, CLUSTER_SIZE)
+    wm_second_result = analyze_one_half(origin_b_clusters, pert_b_clusters, wm_second, CLUSTER_SIZE)
 
     result = {
         **overall,
         "wm_first_analysis": wm_first_result,
         "wm_second_analysis": wm_second_result,
-        "origin_full_watermark_count": origin_full_watermark_count,
-        "perturbed_full_watermark_count": perturbed_full_watermark_count,
-        "sample_full_watermark_remaining_ratio": sample_full_watermark_remaining_ratio,
     }
 
     result["sample_alteration_type"] = classify_sample_level_alteration(result)
@@ -392,7 +330,7 @@ def load_grouped_records(path: str):
 
 
 # =========================
-# 原有 summary 汇总
+# Original summary
 # =========================
 def init_attack_summary():
     return {
@@ -427,10 +365,6 @@ def init_attack_summary():
         "sum_wm_second_origin_cluster_hits": 0,
         "sum_wm_second_perturbed_cluster_hits": 0,
         "sum_wm_second_lost_cluster_hits": 0,
-
-        # 仅保留你要的 sample-wise 平均比例
-        "sum_sample_full_watermark_remaining_ratio": 0.0,
-        "num_sample_full_watermark_remaining_ratio": 0,
     }
 
 
@@ -486,11 +420,6 @@ def update_attack_summary(summary_dict, attack_name, compare_item):
     s["sum_wm_second_perturbed_cluster_hits"] += second.get("perturbed_total_cluster_hits", 0) or 0
     s["sum_wm_second_lost_cluster_hits"] += second.get("lost_total_cluster_hits", 0) or 0
 
-    ratio_fw = compare_item.get("sample_full_watermark_remaining_ratio")
-    if ratio_fw is not None:
-        s["sum_sample_full_watermark_remaining_ratio"] += ratio_fw
-        s["num_sample_full_watermark_remaining_ratio"] += 1
-
 
 def safe_ratio(num, den):
     return num / den if den not in (0, None) else None
@@ -543,12 +472,6 @@ def finalize_summary_rows(summary_dict):
                 s["sum_wm_second_perturbed_cluster_hits"],
                 s["sum_wm_second_origin_cluster_hits"]
             ),
-
-            # 你要的sample-wise平均比例
-            "avg_sample_full_watermark_remaining_ratio": safe_ratio(
-                s["sum_sample_full_watermark_remaining_ratio"],
-                s["num_sample_full_watermark_remaining_ratio"]
-            ),
         }
         rows.append(row)
     return rows
@@ -556,7 +479,7 @@ def finalize_summary_rows(summary_dict):
 
 def write_summary_csv(rows, path):
     if not rows:
-        print(f"[WARN] 没有汇总行可写: {path}")
+        print(f"[WARN] No summary line is available: {path}")
         return
 
     fieldnames = list(rows[0].keys())
@@ -567,14 +490,14 @@ def write_summary_csv(rows, path):
 
 
 # =========================
-# 样本级完整 watermark alteration 汇总
+# New: Complete watermark alteration summary at the sample level
 # =========================
 def init_alteration_summary():
     return {
         "num_records": 0,
         "num_ok_records": 0,
 
-        # 一个 ok 样本对应一个 unique watermark
+        # One OK sample corresponds to one unique watermark.
         "total_unique_watermarks": 0,
 
         "unchanged_count": 0,

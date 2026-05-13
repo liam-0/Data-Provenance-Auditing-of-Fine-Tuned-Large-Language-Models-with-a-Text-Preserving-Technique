@@ -76,7 +76,7 @@ def load_grouped_records(path: str):
 
 
 # =========================
-# 核心分析（A版本）
+# Core Analysis
 # =========================
 def analyze(origin_text, perturbed_text):
     origin_chars = extract_homoglyph_chars(origin_text)
@@ -157,7 +157,7 @@ def write_csv(rows, path):
 
 
 # =========================
-# 主流程
+# main
 # =========================
 def main():
     groups = load_grouped_records(INPUT_JSONL)
